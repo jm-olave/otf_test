@@ -1,7 +1,10 @@
+const hubspot = require('@hubspot/api-client');
 const express = require('express');
 const axios = require('axios');
 const app = express();
 const PORT = 8080;
+const { CLIENT_ID, BASE_URL, SCOPES, CLIENT_SECRET } = process.env;
+const REDIRECT_URL = `${BASE_URL}/oauth/callback`;
 
 app.listen(
     PORT,
@@ -26,7 +29,6 @@ const isPrime = (num) => {
     const maxCharacterId =826; 
     // agrega a rick
     const character1Response = await axios.get('https://rickandmortyapi.com/api/character/1');
-    console.log(character1Response);
     primeCharacters.push(character1Response.data);
     // todos los primos
     for (let i = 2; i <= maxCharacterId; i++) {
@@ -49,5 +51,49 @@ const isPrime = (num) => {
       res.status(500).json({ error: 'Internal Server Error' });
     }
   });
+
+const hubspotApiKey = CLIENT_ID;
+
+// Function to migrate character to HubSpot
+const migrateToHubSpot = async (character) => {
+  try {
+    // Implement HubSpot API requests here
+    // Example: Create a contact using the HubSpot API
+    const hubspotResponse = await axios.post(
+      'https://api.hubapi.com/crm/v3/objects/contacts',
+      character,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${hubspotApiKey}`,
+        },
+      }
+    );
+
+    return hubspotResponse.data;
+  } catch (error) {
+    console.error('Error migrating to HubSpot:', error.message);
+    throw error;
+  }
+};
+
+// Route to migrate characters to HubSpot
+app.post('/migrate-characters', async (req, res) => {
+  try {
+    const characters = await fetchPrimeCharacters();
+
+    // Migrate each character to HubSpot
+    const migratedCharacters = [];
+    for (const character of characters) {
+      const migratedCharacter = await migrateToHubSpot(character);
+      migratedCharacters.push(migratedCharacter);
+    }
+
+    res.json({ migratedCharacters: migratedCharacters });
+  } catch (error) {
+    console.error('Error migrating characters to HubSpot:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 
