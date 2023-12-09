@@ -1,0 +1,69 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "rickandmorty",
+    "dateExported": "2023-12-09T19:41:50.006Z",
+    "version": "1.1",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "e49ef4b4-7e91-4018-9692-7c39345583af",
+            "colId": "9d64dd6b-e519-400c-9283-389a555d6661",
+            "containerId": "",
+            "name": "get characters",
+            "url": "http://localhost:8080/fetch-characters",
+            "method": "GET",
+            "sortNum": 10000,
+            "created": "2023-12-08T16:56:04.260Z",
+            "modified": "2023-12-08T17:11:44.116Z",
+            "headers": [],
+            "params": [],
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{token}}"
+            },
+            "tests": []
+        },
+        {
+            "_id": "1f9fba2b-0578-4c92-a134-c674078a88d7",
+            "colId": "9d64dd6b-e519-400c-9283-389a555d6661",
+            "containerId": "",
+            "name": "migrateCharacters",
+            "url": "http://localhost:8080/migrate-characters",
+            "method": "POST",
+            "sortNum": 15000,
+            "created": "2023-12-09T01:38:17.696Z",
+            "modified": "2023-12-09T01:40:24.513Z",
+            "headers": [],
+            "params": [],
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{token}}"
+            },
+            "tests": []
+        },
+        {
+            "_id": "a69cc920-298d-4cd2-a4b3-403e26da3fa3",
+            "colId": "9d64dd6b-e519-400c-9283-389a555d6661",
+            "containerId": "",
+            "name": "get all cha",
+            "url": "https://rickandmortyapi.com/api/character/?page=42",
+            "method": "GET",
+            "sortNum": 20000,
+            "created": "2023-12-08T17:39:25.235Z",
+            "modified": "2023-12-08T17:40:06.712Z",
+            "headers": [],
+            "params": [
+                {
+                    "name": "page",
+                    "value": "42",
+                    "isPath": false
+                }
+            ],
+            "auth": {
+                "type": "bearer",
+                "bearer": "{{token}}"
+            },
+            "tests": []
+        }
+    ]
+}
