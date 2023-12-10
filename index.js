@@ -56,25 +56,7 @@ const getLocations = async () =>{
     throw error; // Rethrow the error to be caught by the calling function
   }
 };
-// endpoint logic 
-app.get('/get-locations', async (req, res) => {
-  try {
-    const locations = await getLocations();
-    res.json({ locations: locations });
-  } catch (error) {
-    console.error('Error fetching data from Rick and Morty API:', error.message);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-  app.get('/fetch-characters', async (req, res) => {
-    try {
-      const characters = await fetchPrimeCharacters();
-      res.json({ characters: characters });
-    } catch (error) {
-      console.error('Error fetching data from Rick and Morty API:', error.message);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
-  });
+
 // migrations
 
 const hubspotApiKey = CLIENT_ID;
@@ -98,44 +80,65 @@ const migrateLocationAsCompaniesToHubspot = async(location) =>{
     console.log(JSON.stringify(apiResponse, null, 2));
     return apiResponse;
   } catch (error) {
-    console.error('Error migrating to HubSpot:', error.message);
+    console.error('Error migrating Company to HubSpot:', error.message);
     throw error;
   }
 };
 // Function to migrate character to HubSpot
-const migrateToHubSpot = async (character) => {
-
+const migrateCharactersToHubSpot = async (character) => {
+  
   let namePartition = character.name.split(" ");
-  let firstname = namePartition[0];
-  let lastname = namePartition[1];
+  let firstname = " ";
+  let lastname = " ";
+  if(namePartition.length < 3){
+    firstname = namePartition[0];
+    lastname = namePartition[1];
+  }
+  else{
+    firstname = character.name;
+  }
+  
   console.log("names",firstname, lastname);
+  const contact = {
+    inputs: [
+      {properties : {
+        firstname: firstname,
+        lastname: lastname,
+        status_character: character.status,
+        character_species: character.species,
+        character_gender: character.gender
+      }}
+    ]
+  };
   try {
-    // Implement HubSpot API requests here
-    const hubspotResponse = await axios.post(
-      'https://api.hubapi.com/crm/v3/objects/contacts/batch/create',
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${hubspotApiKey}`,
-        },
-        data : {
-          inputs: [
-            // {properties : {
-            //   name: location.name,
-            //   type: location.type,
-            //   dimension: location.dimension,
-            //   created: location.created
-            // }}
-          ]
-        }
-      }
-    );
-    return hubspotResponse.data;
+    const apiResponse = await hubspotClient.crm.contacts.batchApi.create(contact);
+    console.log(JSON.stringify(apiResponse, null, 2));
+    return apiResponse;
   } catch (error) {
-    console.error('Error migrating to HubSpot:', error.message);
+    console.error('Error migrating Contact to HubSpot:', error.message);
     throw error;
   }
 };
+
+// endpoint logic 
+app.get('/get-locations', async (req, res) => {
+  try {
+    const locations = await getLocations();
+    res.json({ locations: locations });
+  } catch (error) {
+    console.error('Error fetching data from Rick and Morty API:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+  app.get('/fetch-characters', async (req, res) => {
+    try {
+      const characters = await fetchPrimeCharacters();
+      res.json({ characters: characters });
+    } catch (error) {
+      console.error('Error fetching data from Rick and Morty API:', error.message);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
 // migrate locations as companies
 app.post('/migrate-locations', async (req, res) => {
   try {
@@ -143,6 +146,7 @@ app.post('/migrate-locations', async (req, res) => {
     for (const location of locations) {
       migrateLocationAsCompaniesToHubspot(location);
     }
+  return res.status(200).json({message: "completed migration for characters"})
   } catch (error) {
     console.error('Error migrating locations to HubSpot:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -154,8 +158,22 @@ app.post('/migrate-characters', async (req, res) => {
     const characters = await fetchPrimeCharacters();
     // Migrate each character to HubSpot
     for (const character of characters) {
-      migrateToHubSpot(character);
+      migrateCharactersToHubSpot(character);
     }
+    return res.status(200).json({message: "completed migration for characters"})
+  } catch (error) {
+    console.error('Error migrating characters to HubSpot:', error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+app.post('/create-associations', async (req, res) => {
+  try {
+    const characters = await fetchPrimeCharacters();
+    // Migrate each character to HubSpot
+    for (const character of characters) {
+      migrateCharactersToHubSpot(character);
+    }
+    return res.status(200).json({message: "completed migration for characters"})
   } catch (error) {
     console.error('Error migrating characters to HubSpot:', error.message);
     res.status(500).json({ error: 'Internal Server Error' });
