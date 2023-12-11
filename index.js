@@ -4,8 +4,7 @@ const axios = require('axios');
 const app = express();
 const PORT = 8080;
 require('dotenv').config();
-const { CLIENT_ID, BASE_URL, SCOPES, CLIENT_SECRET } = process.env;
-const REDIRECT_URL = `${BASE_URL}/oauth/callback`;
+const { CLIENT_ID_SOURCE, BASE_URL, SCOPES, CLIENT_SECRET } = process.env;
 
 /**
  *  code
@@ -59,9 +58,9 @@ const getLocations = async () =>{
 
 // migrations
 
-const hubspotApiKey = CLIENT_ID;
+const hubspotApiKey = CLIENT_ID_SOURCE;
 const hubspotClient = new hubspot.Client({"accessToken":hubspotApiKey});
-
+let companiesMigrated = [];
 // function to migrate locations to hubspot
 const migrateLocationAsCompaniesToHubspot = async(location) =>{
   const company = {
@@ -77,7 +76,11 @@ const migrateLocationAsCompaniesToHubspot = async(location) =>{
 
   try {
     const apiResponse = await hubspotClient.crm.companies.batchApi.create(company);
-    console.log(JSON.stringify(apiResponse, null, 2));
+    console.log(apiResponse);
+    const responseObj = apiResponse;
+    const companyforMigration = responseObj.results.map(result => [result.id, result.properties.name]);
+    companiesMigrated.push(companyforMigration);
+    // console.log(JSON.stringify(apiResponse, null, 2));
     return apiResponse;
   } catch (error) {
     console.error('Error migrating Company to HubSpot:', error.message);
@@ -97,22 +100,44 @@ const migrateCharactersToHubSpot = async (character) => {
   else{
     firstname = character.name;
   }
-  
-  console.log("names",firstname, lastname);
-  const contact = {
-    inputs: [
-      {properties : {
+  // association to location
+const matchingLocation = companiesMigrated.find(tuple => tuple[0] && tuple[0][1] === character.location?.name);
+const idToAssociate = matchingLocation ? matchingLocation[0][0] : null;
+
+let contact = {
+  inputs: [
+    {
+      properties: {
         firstname: firstname,
         lastname: lastname,
         status_character: character.status,
         character_species: character.species,
         character_gender: character.gender
-      }}
-    ]
-  };
+      }
+    }
+  ]
+};
+
+if (idToAssociate !== null && idToAssociate !== undefined) {
+  // Include association only if idToAssociate is valid
+  contact.inputs[0].associations = [
+    {
+      to: {
+        id: idToAssociate
+      },
+      types: [
+        {
+          associationCategory: "HUBSPOT_DEFINED",
+          associationTypeId: 279
+        } ]
+    }
+  ];
+  console.log("contact being migrated:", contact)
+}
+
   try {
     const apiResponse = await hubspotClient.crm.contacts.batchApi.create(contact);
-    console.log(JSON.stringify(apiResponse, null, 2));
+    // console.log(JSON.stringify(apiResponse, null, 2));
     return apiResponse;
   } catch (error) {
     console.error('Error migrating Contact to HubSpot:', error.message);
