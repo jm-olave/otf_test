@@ -49,7 +49,8 @@ Creates or updates to the mirror platform on Hubspot, a contact with properties 
         "character_gender": "Male"
 
     }
-    given the source_id the API will search for a proper match on contact id on source platform, in this case if it does not find a contact that matches the id it will create the contact with properties defined in the body of the petition. if it finds one it will update the contact with given values.
+```
+ given the source_id the API will search for a proper match on contact id on source platform, in this case if it does not find a contact that matches the id it will create the contact with properties defined in the body of the petition. if it finds one it will update the contact with given values.
 * POST /sync-companies:
 Creates or updates to the mirror platform on Hubspot, a company with properties defined as the examples below:
 ```json
@@ -59,7 +60,8 @@ Creates or updates to the mirror platform on Hubspot, a company with properties 
         "dimension": "multiverse",
         "created": "2017-11-10T12:42:04.162Z"
     }
-    given the source_id the API will search for a proper match on company id on source platform, in this case if it does not find a company that matches the id it will create the company with properties defined in the body of the petition. if it finds one it will update the company with given values.
+```
+   given the source_id the API will search for a proper match on company id on source platform, in this case if it does not find a company that matches the id it will create the company with properties defined in the body of the petition. if it finds one it will update the company with given values.
 
 ## Usage
 * Use the provided endpoints to fetch, migrate, and sync data, all described endpoints work as specified on the deployment server of the solution.
