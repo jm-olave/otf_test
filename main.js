@@ -20,12 +20,9 @@ const hubspotClientMirror = new hubspot.Client({
 });
 app.listen(PORT, () => console.log(`its alive uwu on ${PORT}`));
 
-
-
 /**
  *  code
  */
-
 
 // fetch logic
 // fetch characters with id = primer number
@@ -77,8 +74,6 @@ const getLocations = async () => {
     throw error; // Rethrow the error to be caught by the calling function
   }
 };
-
-
 
 /**
  *  Part of the step 1 of the test
@@ -190,6 +185,7 @@ const integrateLocationToHubspotMirrorCreate = async (location) => {
     inputs: [
       {
         properties: {
+          source_id: location.source_id,
           name: location.name,
           location_type: location.type,
           dimension: location.dimension,
@@ -217,6 +213,35 @@ const integrateLocationToHubspotMirrorCreate = async (location) => {
   }
 };
 // update company
+const checkifCompanyExist = async (companySourceId) => {
+  const PublicObjectSearchRequest = {
+    limit: 10,
+    filterGroups: [
+      {
+        filters: [
+          {
+            propertyName: "source_id",
+            value: companySourceId,
+            operator: "EQ",
+          },
+        ],
+      },
+    ],
+  };
+
+  try { 
+    const apiResponse =
+      await hubspotClientMirror.crm.companies.searchApi.doSearch(
+        PublicObjectSearchRequest 
+      );
+    console.log(JSON.stringify(apiResponse, null, 2));
+    return apiResponse?.results?.[0]?.id;
+  } catch (e) {
+    e.message === "HTTP request failed"
+      ? console.error(JSON.stringify(e.response, null, 2))
+      : console.error(e);
+  }
+};
 const integrateLocationToHubspotMirrorUpdate = async (location, id) => {
   console.log(location, id);
   const company = {
@@ -268,14 +293,15 @@ const integrateCharactersToHubSpotMirrorCreate = async (character) => {
     console.log(JSON.stringify(apiResponse, null, 2));
     return apiResponse;
   } catch (error) {
-    console.error("Error migrating Contact to HubSpot:", error.message);
+    console.error("Error integrating Contact to HubSpot:", error.message);
     throw error;
   }
 };
 const integrateCharactersToHubSpotMirrorUpdate = async (character, id) => {
   const contact = {
     inputs: [
-      { id: id,
+      {
+        id: id,
         properties: {
           firstname: character.firstname,
           lastname: character.lastname,
@@ -294,11 +320,10 @@ const integrateCharactersToHubSpotMirrorUpdate = async (character, id) => {
     // console.log(JSON.stringify(apiResponse, null, 2));
     return apiResponse;
   } catch (error) {
-    console.error("Error migrating Contact to HubSpot:", error.message);
+    console.error("Error integrating Contact to HubSpot:", error.message);
     throw error;
   }
 };
-
 
 /**
  *  Endpoint declaration and logic
@@ -363,16 +388,19 @@ app.post("/migrate-characters", async (req, res) => {
 app.post("/sync-locations", async (req, res) => {
   try {
     const location = {
+      source_id: req.body.source_id,
       name: req.body.name,
       type: req.body.type,
       dimension: req.body.dimension,
       created: req.body.created,
     };
-    if (!req.body.id) {
-      integrateLocationToHubspotMirrorCreate(location);
-    } else {
-      console.log("pasa el if de actualizacion");
-      integrateLocationToHubspotMirrorUpdate(location, req.body.id);
+    const companyExist = await checkifCompanyExist(req.body.source_id);
+    console.log("busqueda company", companyExist);
+    if(companyExist){
+      await integrateLocationToHubspotMirrorUpdate(location, companyExist);
+    }
+    else{
+      await integrateLocationToHubspotMirrorCreate(location);
     }
 
     return res
@@ -386,18 +414,18 @@ app.post("/sync-locations", async (req, res) => {
 app.post("/sync-characters", async (req, res) => {
   try {
     const contact = {
-          firstname: req.body.firstname,
-          lastname: req.body.lastname,
-          status_character: req.body.status,
-          character_species: req.body.species,
-          character_gender: req.body.gender,
-          associations: req.body.associations,
+      firstname: req.body.firstname,
+      lastname: req.body.lastname,
+      status_character: req.body.status,
+      character_species: req.body.species,
+      character_gender: req.body.gender,
+      associations: req.body.associations,
     };
     if (!req.body.id) {
-      integrateCharactersToHubSpotMirrorCreate(contact);
+      await integrateCharactersToHubSpotMirrorCreate(contact);
     } else {
       console.log("pasa el if de actualizacion");
-      integrateCharactersToHubSpotMirrorUpdate(contact, req.body.id);
+      await integrateCharactersToHubSpotMirrorUpdate(contact, req.body.id);
     }
 
     return res

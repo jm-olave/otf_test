@@ -38,8 +38,19 @@ Fetches characters with prime IDs from the Rick and Morty API.
 Migrates locations as companies to HubSpot.
 * POST /migrate-characters:
 Migrates characters to HubSpot.
-* POST /sync-contacts:
-Synchronizes contacts with prime character IDs to HubSpot.
+* POST /sync-characters:
+Creates or updates to the mirror platform on Hubspot, a contact with properties defined as the examples below:
+- create: 
+    {
+        "firstname": "prueba 101",
+        "lastname": "prueba 1",
+        "status_character": "prueba 1",
+        "character_species": "prueba 1",
+        "character_gender": "prueba 1",
+        "associations": []
+
+    }
+  
 * POST /sync-companies:
 Synchronizes locations as companies to HubSpot.
 
