@@ -1,5 +1,5 @@
 /*
-  Author: Your Name
+  Author: Joshua Olave
   Description: This API migrates Rick and Morty characters to HubSpot contacts.
 */
 
@@ -18,10 +18,14 @@ const hubspotClient = new hubspot.Client({ accessToken: hubspotApiKey });
 const hubspotClientMirror = new hubspot.Client({
   accessToken: hubspotApiKeyMirror,
 });
+app.listen(PORT, () => console.log(`its alive uwu on ${PORT}`));
+
+
+
 /**
  *  code
  */
-app.listen(PORT, () => console.log(`its alive uwu on ${PORT}`));
+
 
 // fetch logic
 // fetch characters with id = primer number
@@ -74,7 +78,12 @@ const getLocations = async () => {
   }
 };
 
-// migrations logic
+
+
+/**
+ *  Part of the step 1 of the test
+ *  Implementation of the migration to Hubspot Source PLatform
+ */
 
 let companiesMigrated = [];
 // function to migrate locations to hubspot on source platform
@@ -111,66 +120,7 @@ const migrateLocationAsCompaniesToHubspot = async (location) => {
 };
 
 // function to migrate locations to hubspot on mirror platform
-const integrateLocationToHubspotMirrorCreate = async (location) => {
-  const company = {
-    inputs: [
-      {
-        properties: {
-          name: location.name,
-          location_type: location.type,
-          dimension: location.dimension,
-          creation_date: location.created,
-        },
-      },
-    ],
-  };
-  try {
-    const apiResponse = await hubspotClientMirror.crm.companies.batchApi.create(
-      company
-    );
-    console.log(apiResponse);
-    const responseObj = apiResponse;
-    const companyforMigration = responseObj.results.map((result) => [
-      result.id,
-      result.properties.name,
-    ]);
-    companiesMigrated.push(companyforMigration);
-    // console.log(JSON.stringify(apiResponse, null, 2));
-    return apiResponse;
-  } catch (error) {
-    console.error("Error migrating Company to HubSpot:", error.message);
-    throw error;
-  }
-};
-// update company
-const integrateLocationToHubspotMirrorUpdate = async (location, id) => {
-  console.log(location, id);
-  const company = {
-    inputs: [
-      {
-        id: id,
-        properties: {
-          ...(location.name && { name: location.name }),
-          ...(location.type && { location_type: location.type }),
-          ...(location.dimension && { dimension: location.dimension }),
-          ...(location.created && { creation_date: location.created }),
-        },
-      },
-    ],
-  };
-  try {
-    const apiResponse = await hubspotClientMirror.crm.companies.batchApi.update(
-      company
-    );
-    console.log(JSON.stringify(apiResponse, null, 2));
-    console.log(company);
-    // console.log(JSON.stringify(apiResponse, null, 2));
-    return apiResponse;
-  } catch (error) {
-    console.error("Error migrating Company to HubSpot:", error.message);
-    throw error;
-  }
-};
+
 // Function to migrate character to HubSpot
 
 const migrateCharactersToHubSpot = async (character) => {
@@ -232,6 +182,69 @@ const migrateCharactersToHubSpot = async (character) => {
     throw error;
   }
 };
+/***
+ *  Step 2 Integration: implementation oof the integration proces on the mirror platform
+ */
+const integrateLocationToHubspotMirrorCreate = async (location) => {
+  const company = {
+    inputs: [
+      {
+        properties: {
+          name: location.name,
+          location_type: location.type,
+          dimension: location.dimension,
+          creation_date: location.created,
+        },
+      },
+    ],
+  };
+  try {
+    const apiResponse = await hubspotClientMirror.crm.companies.batchApi.create(
+      company
+    );
+    console.log(apiResponse);
+    const responseObj = apiResponse;
+    const companyforMigration = responseObj.results.map((result) => [
+      result.id,
+      result.properties.name,
+    ]);
+    companiesMigrated.push(companyforMigration);
+    // console.log(JSON.stringify(apiResponse, null, 2));
+    return apiResponse;
+  } catch (error) {
+    console.error("Error migrating Company to HubSpot:", error.message);
+    throw error;
+  }
+};
+// update company
+const integrateLocationToHubspotMirrorUpdate = async (location, id) => {
+  console.log(location, id);
+  const company = {
+    inputs: [
+      {
+        id: id,
+        properties: {
+          ...(location.name && { name: location.name }),
+          ...(location.type && { location_type: location.type }),
+          ...(location.dimension && { dimension: location.dimension }),
+          ...(location.created && { creation_date: location.created }),
+        },
+      },
+    ],
+  };
+  try {
+    const apiResponse = await hubspotClientMirror.crm.companies.batchApi.update(
+      company
+    );
+    console.log(JSON.stringify(apiResponse, null, 2));
+    console.log(company);
+    // console.log(JSON.stringify(apiResponse, null, 2));
+    return apiResponse;
+  } catch (error) {
+    console.error("Error migrating Company to HubSpot:", error.message);
+    throw error;
+  }
+};
 // integration character logic
 const integrateCharactersToHubSpotMirrorCreate = async (character) => {
   const contact = {
@@ -285,6 +298,11 @@ const integrateCharactersToHubSpotMirrorUpdate = async (character, id) => {
     throw error;
   }
 };
+
+
+/**
+ *  Endpoint declaration and logic
+ */
 
 // endpoints
 app.get("/get-locations", async (req, res) => {
