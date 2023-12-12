@@ -18,7 +18,7 @@ const hubspotClient = new hubspot.Client({ accessToken: hubspotApiKey });
 const hubspotClientMirror = new hubspot.Client({
   accessToken: hubspotApiKeyMirror,
 });
-app.listen(PORT, () => console.log(`its alive uwu on ${PORT}`));
+app.listen(PORT, () => console.log(`listening on port ${PORT}`));
 
 /**
  *  code
@@ -99,14 +99,12 @@ const migrateLocationAsCompaniesToHubspot = async (location) => {
     const apiResponse = await hubspotClient.crm.companies.batchApi.create(
       company
     );
-    console.log(apiResponse);
     const responseObj = apiResponse;
     const companyforMigration = responseObj.results.map((result) => [
       result.id,
       result.properties.name,
     ]);
     companiesMigrated.push(companyforMigration);
-    // console.log(JSON.stringify(apiResponse, null, 2));
     return apiResponse;
   } catch (error) {
     console.error("Error migrating Company to HubSpot:", error.message);
@@ -163,14 +161,12 @@ const migrateCharactersToHubSpot = async (character) => {
         ],
       },
     ];
-    console.log("contact being migrated:", contact);
   }
 
   try {
     const apiResponse = await hubspotClient.crm.contacts.batchApi.create(
       contact
     );
-    // console.log(JSON.stringify(apiResponse, null, 2));
     return apiResponse;
   } catch (error) {
     console.error("Error migrating Contact to HubSpot:", error.message);
@@ -180,6 +176,62 @@ const migrateCharactersToHubSpot = async (character) => {
 /***
  *  Step 2 Integration: implementation oof the integration proces on the mirror platform
  */
+const checkifCharacterExist = async (characterSourceId) => {
+  const PublicObjectSearchRequest = {
+    limit: 10,
+    filterGroups: [
+      {
+        filters: [
+          {
+            propertyName: "source_id",
+            value: characterSourceId,
+            operator: "EQ",
+          },
+        ],
+      },
+    ],
+  };
+
+  try {
+    const apiResponse =
+      await hubspotClientMirror.crm.contacts.searchApi.doSearch(
+        PublicObjectSearchRequest
+      );
+    return apiResponse?.results?.[0]?.id;
+  } catch (e) {
+    e.message === "HTTP request failed"
+      ? console.error(JSON.stringify(e.response, null, 2))
+      : console.error(e);
+  }
+};
+const checkifCompanyExist = async (companySourceId) => {
+  const PublicObjectSearchRequest = {
+    limit: 10,
+    filterGroups: [
+      {
+        filters: [
+          {
+            propertyName: "source_id",
+            value: companySourceId,
+            operator: "EQ",
+          },
+        ],
+      },
+    ],
+  };
+
+  try {
+    const apiResponse =
+      await hubspotClientMirror.crm.companies.searchApi.doSearch(
+        PublicObjectSearchRequest
+      );
+    return apiResponse?.results?.[0]?.id;
+  } catch (e) {
+    e.message === "HTTP request failed"
+      ? console.error(JSON.stringify(e.response, null, 2))
+      : console.error(e);
+  }
+};
 const integrateLocationToHubspotMirrorCreate = async (location) => {
   const company = {
     inputs: [
@@ -198,14 +250,12 @@ const integrateLocationToHubspotMirrorCreate = async (location) => {
     const apiResponse = await hubspotClientMirror.crm.companies.batchApi.create(
       company
     );
-    console.log(apiResponse);
     const responseObj = apiResponse;
     const companyforMigration = responseObj.results.map((result) => [
       result.id,
       result.properties.name,
     ]);
     companiesMigrated.push(companyforMigration);
-    // console.log(JSON.stringify(apiResponse, null, 2));
     return apiResponse;
   } catch (error) {
     console.error("Error migrating Company to HubSpot:", error.message);
@@ -213,37 +263,7 @@ const integrateLocationToHubspotMirrorCreate = async (location) => {
   }
 };
 // update company
-const checkifCompanyExist = async (companySourceId) => {
-  const PublicObjectSearchRequest = {
-    limit: 10,
-    filterGroups: [
-      {
-        filters: [
-          {
-            propertyName: "source_id",
-            value: companySourceId,
-            operator: "EQ",
-          },
-        ],
-      },
-    ],
-  };
-
-  try { 
-    const apiResponse =
-      await hubspotClientMirror.crm.companies.searchApi.doSearch(
-        PublicObjectSearchRequest 
-      );
-    console.log(JSON.stringify(apiResponse, null, 2));
-    return apiResponse?.results?.[0]?.id;
-  } catch (e) {
-    e.message === "HTTP request failed"
-      ? console.error(JSON.stringify(e.response, null, 2))
-      : console.error(e);
-  }
-};
 const integrateLocationToHubspotMirrorUpdate = async (location, id) => {
-  console.log(location, id);
   const company = {
     inputs: [
       {
@@ -261,9 +281,6 @@ const integrateLocationToHubspotMirrorUpdate = async (location, id) => {
     const apiResponse = await hubspotClientMirror.crm.companies.batchApi.update(
       company
     );
-    console.log(JSON.stringify(apiResponse, null, 2));
-    console.log(company);
-    // console.log(JSON.stringify(apiResponse, null, 2));
     return apiResponse;
   } catch (error) {
     console.error("Error migrating Company to HubSpot:", error.message);
@@ -276,6 +293,7 @@ const integrateCharactersToHubSpotMirrorCreate = async (character) => {
     inputs: [
       {
         properties: {
+          source_id: character.source_id,
           firstname: character.firstname,
           lastname: character.lastname,
           status_character: character.status,
@@ -290,7 +308,6 @@ const integrateCharactersToHubSpotMirrorCreate = async (character) => {
     const apiResponse = await hubspotClientMirror.crm.contacts.batchApi.create(
       contact
     );
-    console.log(JSON.stringify(apiResponse, null, 2));
     return apiResponse;
   } catch (error) {
     console.error("Error integrating Contact to HubSpot:", error.message);
@@ -309,7 +326,6 @@ const integrateCharactersToHubSpotMirrorUpdate = async (character, id) => {
           character_species: character.species,
           character_gender: character.gender,
         },
-        ...(character.associations && { associations: character.associations }),
       },
     ],
   };
@@ -317,7 +333,6 @@ const integrateCharactersToHubSpotMirrorUpdate = async (character, id) => {
     const apiResponse = await hubspotClientMirror.crm.contacts.batchApi.update(
       contact
     );
-    // console.log(JSON.stringify(apiResponse, null, 2));
     return apiResponse;
   } catch (error) {
     console.error("Error integrating Contact to HubSpot:", error.message);
@@ -395,11 +410,9 @@ app.post("/sync-locations", async (req, res) => {
       created: req.body.created,
     };
     const companyExist = await checkifCompanyExist(req.body.source_id);
-    console.log("busqueda company", companyExist);
-    if(companyExist){
+    if (companyExist) {
       await integrateLocationToHubspotMirrorUpdate(location, companyExist);
-    }
-    else{
+    } else {
       await integrateLocationToHubspotMirrorCreate(location);
     }
 
@@ -414,18 +427,18 @@ app.post("/sync-locations", async (req, res) => {
 app.post("/sync-characters", async (req, res) => {
   try {
     const contact = {
+      source_id: req.body.source_id,
       firstname: req.body.firstname,
       lastname: req.body.lastname,
       status_character: req.body.status,
       character_species: req.body.species,
       character_gender: req.body.gender,
-      associations: req.body.associations,
     };
-    if (!req.body.id) {
-      await integrateCharactersToHubSpotMirrorCreate(contact);
+    const contactExist = await checkifCharacterExist(contact.source_id);
+    if (contactExist) {
+      await integrateCharactersToHubSpotMirrorUpdate(contact, contactExist);
     } else {
-      console.log("pasa el if de actualizacion");
-      await integrateCharactersToHubSpotMirrorUpdate(contact, req.body.id);
+      await integrateCharactersToHubSpotMirrorCreate(contact);
     }
 
     return res
