@@ -40,21 +40,31 @@ Migrates locations as companies to HubSpot.
 Migrates characters to HubSpot.
 * POST /sync-characters:
 Creates or updates to the mirror platform on Hubspot, a contact with properties defined as the examples below:
-- create: 
-    {
-        "firstname": "prueba 101",
-        "lastname": "prueba 1",
-        "status_character": "prueba 1",
-        "character_species": "prueba 1",
-        "character_gender": "prueba 1",
-        "associations": []
+```json
+    {   "source_id":"101",
+        "firstname": "Rick",
+        "lastname": "Sanchez",
+        "status_character": "Alive",
+        "character_species": "Humanoid",
+        "character_gender": "Male"
 
     }
-  
+    given the source_id the API will search for a proper match on contact id on source platform, in this case if it does not find a contact that matches the id it will create the contact with properties defined in the body of the petition. if it finds one it will update the contact with given values.
 * POST /sync-companies:
-Synchronizes locations as companies to HubSpot.
+Creates or updates to the mirror platform on Hubspot, a company with properties defined as the examples below:
+```json
+    {   "source_id": "183",
+        "name": "Bepis 9",
+        "type": "Planet",
+        "dimension": "multiverse",
+        "created": "2017-11-10T12:42:04.162Z"
+    }
+    given the source_id the API will search for a proper match on company id on source platform, in this case if it does not find a company that matches the id it will create the company with properties defined in the body of the petition. if it finds one it will update the company with given values.
 
 ## Usage
-* Use the provided endpoints to fetch, migrate, and sync data.
+* Use the provided endpoints to fetch, migrate, and sync data, all described endpoints work as specified on the deployment server of the solution.
+## Link to server
+* the server was deployed using Render host services, the following is the url for accesing the defined endpoints.
+[Link Text](https://otf-testapi.onrender.com)
 
-* Check the console logs for migration progress.
+## Check the solution using POSTMAN or oother software for testing, and managing APIs.
