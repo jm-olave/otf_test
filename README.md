@@ -67,6 +67,6 @@ Creates or updates to the mirror platform on Hubspot, a company with properties 
 * Use the provided endpoints to fetch, migrate, and sync data, all described endpoints work as specified on the deployment server of the solution.
 ## Link to server
 * the server was deployed using Render host services, the following is the url for accesing the defined endpoints.
-[Link Text](https://otf-testapi.onrender.com)
+### https://otf-testapi.onrender.com
 
 ## Check the solution using POSTMAN or oother software for testing, and managing APIs.
