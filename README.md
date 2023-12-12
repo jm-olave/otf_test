@@ -69,4 +69,4 @@ Creates or updates to the mirror platform on Hubspot, a company with properties 
 * the server was deployed using Render host services, the following is the url for accesing the defined endpoints.
 ### https://otf-testapi.onrender.com
 
-## Check the solution using POSTMAN or oother software for testing, and managing APIs.
+## Check the solution using POSTMAN or other software for testing, and managing APIs, it is required to setup a .env file with the keys to access the API'S of the apps on Hubspot for running the solution locally.
